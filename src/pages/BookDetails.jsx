@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Calendar, BookOpen, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, User, Calendar, BookOpen, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { libraryService } from '../services/api';
 
 const mockBookDetails = {
   id: '1',
@@ -12,7 +13,7 @@ const mockBookDetails = {
   publishDate: '2013-11-05',
   pages: 368,
   description: "Even the smartest among us can feel inept as we fail to figure out which light switch or oven burner to turn on, or whether to push, pull, or slide a door. The fault, argues this ingenious—even liberating—book, lies not in ourselves, but in product design that ignores the needs of users and the principles of cognitive psychology. The problems range from ambiguous and hidden controls to arbitrary relationships between controls and functions, coupled with a lack of feedback or other assistance and unreasonable demands on memorization. The Design of Everyday Things shows that good, usable design is possible. The rules are simple: make things visible, exploit natural relationships that couple function and control, and make intelligent use of constraints. The goal: guide the user effortlessly to the right action on the right control at the right time.",
-  available: true,
+  status: 'Available',
   coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=800'
 };
 
@@ -22,20 +23,31 @@ const BookDetails = () => {
   const [showModal, setShowModal] = useState(false);
   const [reservationData, setReservationData] = useState({ name: '', email: '' });
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   // In a real app, you would fetch details using `id`
   const book = mockBookDetails;
 
-  const handleReserve = (e) => {
+  const handleReserve = async (e) => {
     e.preventDefault();
-    // Simulate API call to ERPNext endpoint
-    setTimeout(() => {
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    try {
+      await libraryService.reserveBook({
+        articleId: book.id,
+        memberEmail: reservationData.email
+      });
       setIsSuccess(true);
       setTimeout(() => {
         setShowModal(false);
         setIsSuccess(false);
       }, 3000);
-    }, 1000);
+    } catch (err) {
+      setErrorMsg("Failed to reserve the book. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -53,8 +65,12 @@ const BookDetails = () => {
         {/* Details Column */}
         <div>
           <div style={{ marginBottom: '1rem' }}>
-            <span className={`badge ${book.available ? 'badge-success' : 'badge-danger'}`}>
-              {book.available ? 'Available' : 'Currently Issued'}
+            <span className={`badge ${
+              book.status === 'Available' ? 'badge-success' : 
+              book.status === 'Issued' ? 'badge-danger' : 
+              book.status === 'Reserved' ? 'badge-reserved' : 'badge-overdue'
+            }`}>
+              {book.status}
             </span>
             <span className="badge" style={{ backgroundColor: 'var(--color-background)', color: 'var(--color-text-secondary)', marginLeft: '0.5rem' }}>
               {book.category}
@@ -93,10 +109,10 @@ const BookDetails = () => {
           <button 
             className="btn btn-primary" 
             style={{ padding: '1rem 2rem', fontSize: 'var(--font-size-md)' }}
-            disabled={!book.available}
+            disabled={book.status !== 'Available'}
             onClick={() => setShowModal(true)}
           >
-            {book.available ? 'Reserve this Book' : 'Join Waitlist'}
+            {book.status === 'Available' ? 'Reserve this Book' : 'Not Available'}
           </button>
         </div>
       </div>
@@ -119,8 +135,9 @@ const BookDetails = () => {
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h2>Reserve Book</h2>
-                  <button onClick={() => setShowModal(false)} style={{ fontSize: '1.5rem', lineHeight: 1 }}>&times;</button>
+                  <button onClick={() => setShowModal(false)} style={{ fontSize: '1.5rem', lineHeight: 1 }} disabled={isSubmitting}>&times;</button>
                 </div>
+                {errorMsg && <div className="alert-panel alert-danger" style={{ padding: '0.5rem 1rem', marginBottom: '1rem' }}>{errorMsg}</div>}
                 <form onSubmit={handleReserve}>
                   <div className="input-group">
                     <label className="input-label">Member Name</label>
@@ -143,8 +160,10 @@ const BookDetails = () => {
                     />
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                    <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                    <button type="submit" className="btn btn-primary">Confirm Reservation</button>
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)} disabled={isSubmitting}>Cancel</button>
+                    <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                      {isSubmitting ? 'Reserving...' : 'Confirm Reservation'}
+                    </button>
                   </div>
                 </form>
               </>

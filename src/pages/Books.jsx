@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, BookOpen } from 'lucide-react';
 import BookCard from '../components/shared/BookCard';
-import { academicBooks } from '../data/mockData';
+import { libraryService } from '../services/api';
 
 const categories = ['All', 'Computer Science', 'Information Technology', 'Data Science', 'Software Engineering'];
 const statuses = ['All', 'Available', 'Issued', 'Reserved', 'Overdue'];
 
 const Books = () => {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
 
-  const filteredBooks = academicBooks.filter(book => {
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const data = await libraryService.getAllBooks();
+        setBooks(data);
+      } catch (error) {
+        console.error("Error fetching books catalog", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooks();
+  }, []);
+
+  const filteredBooks = books.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           book.author.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || book.category === selectedCategory;
@@ -28,7 +45,7 @@ const Books = () => {
             <BookOpen size={28} color="var(--color-primary)" />
             Library Catalog
           </h1>
-          <p className="text-muted">Browse our complete collection of {academicBooks.length} articles.</p>
+          <p className="text-muted">Browse our complete collection of {books.length} articles.</p>
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -79,15 +96,19 @@ const Books = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-6">
-        {filteredBooks.length > 0 ? (
-          filteredBooks.map(book => <BookCard key={book.id} {...book} />)
-        ) : (
-          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 0' }}>
-            <p className="text-muted">No books found matching your criteria.</p>
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '4rem 0' }}>Loading catalog...</div>
+      ) : (
+        <div className="grid grid-cols-4 gap-6">
+          {filteredBooks.length > 0 ? (
+            filteredBooks.map(book => <BookCard key={book.id} {...book} />)
+          ) : (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 0' }}>
+              <p className="text-muted">No books found matching your criteria.</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,11 +1,40 @@
-import React from 'react';
-import { Search, Book, CheckCircle, Clock, AlertTriangle, Calculator, CalendarCheck, Activity, RotateCcw, PieChart, Printer } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Book, CheckCircle, Clock, AlertTriangle, Calculator, RotateCcw, PieChart, Printer } from 'lucide-react';
 import StatCard from '../components/shared/StatCard';
 import BookCard from '../components/shared/BookCard';
-import { academicBooks, mockIssueRecords } from '../data/mockData';
+import { libraryService } from '../services/api';
 
 const Home = () => {
-  const featuredBooks = academicBooks.slice(0, 4);
+  const [stats, setStats] = useState({ totalArticles: "0", availableBooks: "0", issuedBooks: "0", overdueBooks: "0" });
+  const [circulations, setCirculations] = useState([]);
+  const [featuredBooks, setFeaturedBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [dashboardStats, recentCirculations, allBooks] = await Promise.all([
+          libraryService.getDashboardStats(),
+          libraryService.getRecentCirculations(),
+          libraryService.getAllBooks()
+        ]);
+        
+        setStats(dashboardStats);
+        setCirculations(recentCirculations);
+        setFeaturedBooks(allBooks.slice(0, 4));
+      } catch (error) {
+        console.error("Error loading home dashboard data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Loading Dashboard Data...</div>;
+  }
 
   return (
     <div>
@@ -14,8 +43,8 @@ const Home = () => {
         <div className="alert-panel alert-danger">
           <AlertTriangle size={24} />
           <div>
-            <strong>System Alert:</strong> There are 2 members with overdue books exceeding the maximum fine limit. 
-            <a href="#" style={{ marginLeft: '0.5rem', fontWeight: 600, textDecoration: 'underline' }}>View Overdue Report</a>
+            <strong>System Alert:</strong> There are members with overdue books exceeding the maximum fine limit. 
+            <a href="/reports" style={{ marginLeft: '0.5rem', fontWeight: 600, textDecoration: 'underline' }}>View Overdue Report</a>
           </div>
         </div>
       </div>
@@ -41,15 +70,15 @@ const Home = () => {
             <span className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Updated: Just now</span>
           </div>
           <div className="grid grid-cols-4 gap-6">
-            <StatCard title="Total Articles" value="15,240" icon={Book} trend="+124 this month" />
-            <StatCard title="Available Books" value="11,850" icon={CheckCircle} />
-            <StatCard title="Issued Books" value="3,210" icon={Clock} trend="-15 since yesterday" />
-            <StatCard title="Overdue Books" value="180" icon={AlertTriangle} trend="+12 this week" />
+            <StatCard title="Total Articles" value={stats.totalArticles} icon={Book} />
+            <StatCard title="Available Books" value={stats.availableBooks} icon={CheckCircle} />
+            <StatCard title="Issued Books" value={stats.issuedBooks} icon={Clock} />
+            <StatCard title="Overdue Books" value={stats.overdueBooks} icon={AlertTriangle} />
           </div>
         </section>
 
         <div className="grid grid-cols-3 gap-8" style={{ marginBottom: '4rem' }}>
-          {/* Recent Issue Records Table (Takes 2/3 width) */}
+          {/* Recent Issue Records Table */}
           <section style={{ gridColumn: 'span 2' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2>Recent Circulations</h2>
@@ -66,7 +95,7 @@ const Home = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockIssueRecords.map((req, i) => (
+                  {circulations.map((req, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid var(--color-background)' }}>
                       <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{req.member}</td>
                       <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{req.article}</td>
@@ -87,7 +116,7 @@ const Home = () => {
             </div>
           </section>
 
-          {/* ERP Features Section (Takes 1/3 width) */}
+          {/* ERP Features Section */}
           <section style={{ gridColumn: 'span 1' }}>
             <h2 style={{ marginBottom: '1.5rem' }}>ERP Modules</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
