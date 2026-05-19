@@ -3,7 +3,6 @@ import { Search, Filter, BookOpen } from 'lucide-react';
 import BookCard from '../components/shared/BookCard';
 import { libraryService } from '../services/api';
 
-const categories = ['All', 'Computer Science', 'Information Technology', 'Data Science', 'Software Engineering'];
 const statuses = ['All', 'Available', 'Issued', 'Reserved', 'Overdue'];
 
 const Books = () => {
@@ -13,6 +12,9 @@ const Books = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
+
+  // Compute unique categories dynamically from loaded books
+  const dynamicCategories = ['All', ...new Set(books.map(book => book.category).filter(Boolean))];
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -72,7 +74,7 @@ const Books = () => {
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
-                {categories.map(cat => (
+                {dynamicCategories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
