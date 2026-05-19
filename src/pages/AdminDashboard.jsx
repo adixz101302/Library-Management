@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Book, Users, ClipboardList, TrendingUp } from 'lucide-react';
+import { Book, Users, ClipboardList, TrendingUp, AlertTriangle, Plus, Send, Settings as SettingsIcon } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
 import StatCard from '../components/shared/StatCard';
 
+// ----------------------------------------------------
+// 1. DASHBOARD OVERVIEW VIEW
+// ----------------------------------------------------
 const DashboardOverview = () => {
   return (
     <div>
@@ -48,7 +51,7 @@ const DashboardOverview = () => {
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3>Recent Reservations</h3>
-            <a href="#" className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>View All</a>
+            <a href="/dashboard/reservations" className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>View All</a>
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
@@ -75,7 +78,7 @@ const DashboardOverview = () => {
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3>Overdue Returns</h3>
-            <a href="#" className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>View All</a>
+            <a href="/dashboard/overdue" className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>View All</a>
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
@@ -103,13 +106,353 @@ const DashboardOverview = () => {
   );
 };
 
-const PlaceholderPage = ({ title }) => (
-  <div>
-    <h1>{title}</h1>
-    <p className="text-muted" style={{ marginTop: '1rem' }}>This page will be connected to ERPNext REST APIs.</p>
-  </div>
+// ----------------------------------------------------
+// 2. INVENTORY VIEW (WITH MODAL FORM)
+// ----------------------------------------------------
+const InventoryView = () => {
+  const [books, setBooks] = useState([
+    { id: 'B-101', title: 'Artificial Intelligence: A Modern Approach', author: 'Stuart Russell', category: 'Computer Science', qty: 5, status: 'Available' },
+    { id: 'B-102', title: 'Introduction to Algorithms', author: 'Thomas H. Cormen', category: 'Computer Science', qty: 2, status: 'Issued' },
+    { id: 'B-103', title: 'Database System Concepts', author: 'Abraham Silberschatz', category: 'Information Technology', qty: 3, status: 'Reserved' },
+    { id: 'B-104', title: 'Clean Architecture', author: 'Robert C. Martin', category: 'Software Engineering', qty: 4, status: 'Available' }
+  ]);
+  const [showModal, setShowModal] = useState(false);
+  const [newBook, setNewBook] = useState({ title: '', author: '', category: 'Computer Science', qty: 1 });
+
+  const handleAddBook = (e) => {
+    e.preventDefault();
+    const newId = `B-${Math.floor(100 + Math.random() * 900)}`;
+    setBooks([...books, {
+      id: newId,
+      title: newBook.title,
+      author: newBook.author,
+      category: newBook.category,
+      qty: parseInt(newBook.qty),
+      status: 'Available'
+    }]);
+    setShowModal(false);
+    setNewBook({ title: '', author: '', category: 'Computer Science', qty: 1 });
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1>Book Inventory Management</h1>
+        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => setShowModal(true)}>
+          <Plus size={18} /> Add New Book
+        </button>
+      </div>
+
+      <div className="card" style={{ padding: 0 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead>
+            <tr style={{ backgroundColor: 'var(--color-background)', borderBottom: '1px solid var(--color-background)' }}>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Book ID</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Title</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Author</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Category</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Quantity</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {books.map((book) => (
+              <tr key={book.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{book.id}</td>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{book.title}</td>
+                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{book.author}</td>
+                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{book.category}</td>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{book.qty}</td>
+                <td style={{ padding: '1rem 1.5rem' }}>
+                  <span className={`badge ${
+                    book.status === 'Available' ? 'badge-success' : 
+                    book.status === 'Issued' ? 'badge-danger' : 'badge-reserved'
+                  }`}>
+                    {book.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {showModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2>Add New Book</h2>
+              <button onClick={() => setShowModal(false)} style={{ fontSize: '1.5rem', lineHeight: 1 }}>&times;</button>
+            </div>
+            <form onSubmit={handleAddBook}>
+              <div className="input-group">
+                <label className="input-label">Title</label>
+                <input type="text" className="input-field" required value={newBook.title} onChange={e => setNewBook({...newBook, title: e.target.value})} />
+              </div>
+              <div className="input-group">
+                <label className="input-label">Author</label>
+                <input type="text" className="input-field" required value={newBook.author} onChange={e => setNewBook({...newBook, author: e.target.value})} />
+              </div>
+              <div className="input-group">
+                <label className="input-label">Category</label>
+                <select className="input-field" value={newBook.category} onChange={e => setNewBook({...newBook, category: e.target.value})}>
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="Software Engineering">Software Engineering</option>
+                </select>
+              </div>
+              <div className="input-group" style={{ marginBottom: '2rem' }}>
+                <label className="input-label">Quantity</label>
+                <input type="number" min="1" className="input-field" required value={newBook.qty} onChange={e => setNewBook({...newBook, qty: e.target.value})} />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Add Book</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ----------------------------------------------------
+// 3. MEMBERS VIEW
+// ----------------------------------------------------
+const MembersView = () => {
+  const [members] = useState([
+    { id: 'MEM-001', name: 'John Doe', email: 'john@university.edu', activeIssues: 2, status: 'Active' },
+    { id: 'MEM-002', name: 'Jane Smith', email: 'jane@university.edu', activeIssues: 0, status: 'Active' },
+    { id: 'MEM-003', name: 'Alan Turing', email: 'turing@university.edu', activeIssues: 4, status: 'Suspended' },
+    { id: 'MEM-004', name: 'Grace Hopper', email: 'hopper@university.edu', activeIssues: 1, status: 'Active' }
+  ]);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1>Member Management</h1>
+      </div>
+
+      <div className="card" style={{ padding: 0 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead>
+            <tr style={{ backgroundColor: 'var(--color-background)', borderBottom: '1px solid var(--color-background)' }}>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Member ID</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Name</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Email</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Active Issues</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {members.map((mem) => (
+              <tr key={mem.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{mem.id}</td>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{mem.name}</td>
+                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{mem.email}</td>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{mem.activeIssues}</td>
+                <td style={{ padding: '1rem 1.5rem' }}>
+                  <span className={`badge ${mem.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                    {mem.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// ----------------------------------------------------
+// 4. RESERVATIONS REQUESTS VIEW (INTERACTIVE STATUS UPDATES)
+// ----------------------------------------------------
+const ReservationsView = () => {
+  const [requests, setRequests] = useState([
+    { id: 'REQ-01', member: 'Alice Smith', book: 'Clean Code', date: '2026-05-18', status: 'Pending' },
+    { id: 'REQ-02', member: 'Bob Jones', book: 'Dune', date: '2026-05-17', status: 'Approved' },
+    { id: 'REQ-03', member: 'Charlie Brown', book: '1984', date: '2026-05-16', status: 'Pending' }
+  ]);
+
+  const updateStatus = (id, newStatus) => {
+    setRequests(requests.map(req => req.id === id ? { ...req, status: newStatus } : req));
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1>Reservation Requests</h1>
+      </div>
+
+      <div className="card" style={{ padding: 0 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead>
+            <tr style={{ backgroundColor: 'var(--color-background)', borderBottom: '1px solid var(--color-background)' }}>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Request ID</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Member</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Book Title</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Date Requested</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Status</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {requests.map((req) => (
+              <tr key={req.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{req.id}</td>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{req.member}</td>
+                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{req.book}</td>
+                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{req.date}</td>
+                <td style={{ padding: '1rem 1.5rem' }}>
+                  <span className={`badge ${
+                    req.status === 'Approved' ? 'badge-success' : 
+                    req.status === 'Rejected' ? 'badge-danger' : 'badge-reserved'
+                  }`}>
+                    {req.status}
+                  </span>
+                </td>
+                <td style={{ padding: '1rem 1.5rem' }}>
+                  {req.status === 'Pending' ? (
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => updateStatus(req.id, 'Approved')}>Approve</button>
+                      <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => updateStatus(req.id, 'Rejected')}>Reject</button>
+                    </div>
+                  ) : (
+                    <span className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Processed</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// ----------------------------------------------------
+// 5. OVERDUE VIEW (WITH TOAST REMINDERS)
+// ----------------------------------------------------
+const OverdueView = () => {
+  const [overdues] = useState([
+    { id: 'TRX-901', member: 'Jane Smith', email: 'jane@university.edu', book: 'Clean Architecture', days: 4, fine: '$8.00' },
+    { id: 'TRX-902', member: 'Alan Turing', email: 'turing@university.edu', book: 'Python for Data Analysis', days: 1, fine: '$2.00' }
+  ]);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const triggerReminder = (email) => {
+    setToastMessage(`Email notification sent successfully to ${email}!`);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1>Overdue Returns Tracking</h1>
+      </div>
+
+      {toastMessage && (
+        <div className="alert-panel alert-success" style={{ marginBottom: '1.5rem', padding: '0.75rem 1rem' }}>
+          <Send size={18} />
+          <div>{toastMessage}</div>
+        </div>
+      )}
+
+      <div className="card" style={{ padding: 0 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead>
+            <tr style={{ backgroundColor: 'var(--color-background)', borderBottom: '1px solid var(--color-background)' }}>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Transaction</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Member</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Book Title</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Days Overdue</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Calculated Fine</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {overdues.map((item) => (
+              <tr key={item.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{item.id}</td>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{item.member}</td>
+                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{item.book}</td>
+                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-danger)', fontWeight: 600 }}>{item.days} days</td>
+                <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{item.fine}</td>
+                <td style={{ padding: '1rem 1.5rem' }}>
+                  <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => triggerReminder(item.email)}>
+                    <Send size={12} /> Send Alert
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// ----------------------------------------------------
+// 6. SYSTEM SETTINGS VIEW
+// ----------------------------------------------------
+const SettingsView = () => {
+  const [settings, setSettings] = useState({
+    loanPeriod: '14',
+    dailyFine: '2.00',
+    maxBooks: '5'
+  });
+  const [success, setSuccess] = useState(false);
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
+  };
+
+  return (
+    <div style={{ maxWidth: '600px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2.5rem' }}>
+        <SettingsIcon size={28} color="var(--color-primary)" />
+        <h1 style={{ margin: 0 }}>System Settings</h1>
+      </div>
+
+      {success && (
+        <div className="alert-panel alert-success" style={{ marginBottom: '1.5rem', padding: '0.75rem 1rem' }}>
+          <CheckCircle size={18} />
+          <div>ERPNext System configuration updated successfully!</div>
+        </div>
+      )}
+
+      <form className="card" onSubmit={handleSave} style={{ padding: '2.5rem' }}>
+        <div className="input-group">
+          <label className="input-label">Standard Loan Period (Days)</label>
+          <input type="number" min="1" className="input-field" value={settings.loanPeriod} onChange={e => setSettings({...settings, loanPeriod: e.target.value})} required />
+        </div>
+        <div className="input-group">
+          <label className="input-label">Daily Overdue Fine Amount ($)</label>
+          <input type="text" className="input-field" value={settings.dailyFine} onChange={e => setSettings({...settings, dailyFine: e.target.value})} required />
+        </div>
+        <div className="input-group" style={{ marginBottom: '2.5rem' }}>
+          <label className="input-label">Max Books Borrowed per Member</label>
+          <input type="number" min="1" className="input-field" value={settings.maxBooks} onChange={e => setSettings({...settings, maxBooks: e.target.value})} required />
+        </div>
+        <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem' }}>Save Configurations</button>
+      </form>
+    </div>
+  );
+};
+
+// Auxiliary CheckCircle component for Settings view
+const CheckCircle = ({ size }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
 );
 
+// ----------------------------------------------------
+// MAIN ROUTER CONTAINER
+// ----------------------------------------------------
 const AdminDashboard = () => {
   return (
     <div className="dashboard-layout">
@@ -117,11 +460,11 @@ const AdminDashboard = () => {
       <main className="dashboard-content">
         <Routes>
           <Route path="/" element={<DashboardOverview />} />
-          <Route path="/inventory" element={<PlaceholderPage title="Book Inventory Management" />} />
-          <Route path="/members" element={<PlaceholderPage title="Member Management" />} />
-          <Route path="/reservations" element={<PlaceholderPage title="Reservation Requests" />} />
-          <Route path="/overdue" element={<PlaceholderPage title="Overdue Returns Tracking" />} />
-          <Route path="/settings" element={<PlaceholderPage title="System Settings" />} />
+          <Route path="/inventory" element={<InventoryView />} />
+          <Route path="/members" element={<MembersView />} />
+          <Route path="/reservations" element={<ReservationsView />} />
+          <Route path="/overdue" element={<OverdueView />} />
+          <Route path="/settings" element={<SettingsView />} />
         </Routes>
       </main>
     </div>
