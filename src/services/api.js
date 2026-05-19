@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { academicBooks, mockIssueRecords } from '../data/mockData';
+import { academicBooks, mockIssueRecords, mockReservations } from '../data/mockData';
 
 const ERPNEXT_URL = import.meta.env.VITE_ERPNEXT_URL;
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -95,5 +95,30 @@ export const libraryService = {
     
     // Graceful Fallback mock success
     return new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1000));
+  },
+
+  // Fetch User Reservations
+  getMyReservations: async () => {
+    if (isConfigured) {
+      try {
+        const response = await api.get('/api/resource/Library Transaction', {
+          params: { 
+            filters: '[["type", "=", "Issue"], ["status", "in", ["Pending", "Approved"]]]',
+            fields: '["name", "article", "creation", "expected_availability", "status"]',
+            limit_page_length: 50
+          }
+        });
+        return response.data.data.map(res => ({
+          id: res.name,
+          article: res.article,
+          date: res.creation.split(' ')[0],
+          expectedAvailability: res.expected_availability || 'Pending',
+          status: res.status
+        }));
+      } catch (error) {
+        console.error("ERPNext API Failed (Reservations). Falling back to mock data.", error);
+      }
+    }
+    return mockReservations;
   }
 };

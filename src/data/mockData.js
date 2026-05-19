@@ -71,3 +71,9 @@ export const mockIssueRecords = [
   { member: 'Alan Turing', article: 'Python for Data Analysis', status: 'Overdue', returnDate: '2026-05-18' },
   { member: 'Grace Hopper', article: 'Database System Concepts', status: 'Reserved', returnDate: '-' }
 ];
+
+export const mockReservations = [
+  { id: 'RES-001', article: 'The Design of Everyday Things', date: '2026-05-18', expectedAvailability: '2026-05-22', status: 'Pending' },
+  { id: 'RES-002', article: 'Database System Concepts', date: '2026-05-15', expectedAvailability: 'Available Now', status: 'Approved' },
+  { id: 'RES-003', article: 'Clean Architecture', date: '2026-05-10', expectedAvailability: '-', status: 'Cancelled' }
+];

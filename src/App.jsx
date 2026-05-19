@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Books from './pages/Books';
 import BookDetails from './pages/BookDetails';
 import AdminDashboard from './pages/AdminDashboard';
+import Reservations from './pages/Reservations';
 
 const PlaceholderPage = ({ title }) => (
   <div className="container main-content">
@@ -24,7 +25,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/books" element={<Books />} />
         <Route path="/books/:id" element={<BookDetails />} />
-        <Route path="/reservations" element={<PlaceholderPage title="My Reservations" />} />
+        <Route path="/reservations" element={<Reservations />} />
         <Route path="/reports" element={<PlaceholderPage title="Library Reports" />} />
         <Route path="/dashboard/*" element={<AdminDashboard />} />
       </Routes>
