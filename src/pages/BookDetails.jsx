@@ -129,7 +129,7 @@ const BookDetails = () => {
               <div style={{ textAlign: 'center', padding: '2rem 0' }}>
                 <CheckCircle size={64} color="var(--color-success)" style={{ margin: '0 auto 1rem' }} />
                 <h2>Reservation Successful!</h2>
-                <p className="text-muted">Your reservation for "{book.title}" has been confirmed.</p>
+                <p className="text-muted">Your reservation for &quot;{book.title}&quot; has been confirmed.</p>
               </div>
             ) : (
               <>
