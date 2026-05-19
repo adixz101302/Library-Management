@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { academicBooks, mockIssueRecords, mockReservations } from '../data/mockData';
+import { academicBooks, mockIssueRecords, mockReservations, mockReports } from '../data/mockData';
 
 const ERPNEXT_URL = import.meta.env.VITE_ERPNEXT_URL;
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -120,5 +120,18 @@ export const libraryService = {
       }
     }
     return mockReservations;
+  },
+
+  // Fetch Library Reports
+  getLibraryReports: async () => {
+    if (isConfigured) {
+      try {
+        const response = await api.get('/api/method/library_management.api.get_reports');
+        return response.data.message;
+      } catch (error) {
+        console.error("ERPNext API Failed (Reports). Falling back to mock data.", error);
+      }
+    }
+    return mockReports;
   }
 };

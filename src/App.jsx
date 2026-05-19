@@ -9,13 +9,7 @@ import Books from './pages/Books';
 import BookDetails from './pages/BookDetails';
 import AdminDashboard from './pages/AdminDashboard';
 import Reservations from './pages/Reservations';
-
-const PlaceholderPage = ({ title }) => (
-  <div className="container main-content">
-    <h1>{title}</h1>
-    <p className="text-muted" style={{ marginTop: '1rem' }}>This page will be connected to ERPNext REST APIs.</p>
-  </div>
-);
+import Reports from './pages/Reports';
 
 function App() {
   return (
@@ -26,7 +20,7 @@ function App() {
         <Route path="/books" element={<Books />} />
         <Route path="/books/:id" element={<BookDetails />} />
         <Route path="/reservations" element={<Reservations />} />
-        <Route path="/reports" element={<PlaceholderPage title="Library Reports" />} />
+        <Route path="/reports" element={<Reports />} />
         <Route path="/dashboard/*" element={<AdminDashboard />} />
       </Routes>
       <Footer />

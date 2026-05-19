@@ -77,3 +77,19 @@ export const mockReservations = [
   { id: 'RES-002', article: 'Database System Concepts', date: '2026-05-15', expectedAvailability: 'Available Now', status: 'Approved' },
   { id: 'RES-003', article: 'Clean Architecture', date: '2026-05-10', expectedAvailability: '-', status: 'Cancelled' }
 ];
+
+export const mockReports = {
+  finesCollected: "$1,240.00",
+  activeMembers: "3,450",
+  mostPopularCategory: "Computer Science",
+  categoryBreakdown: [
+    { name: 'Computer Science', percentage: 45 },
+    { name: 'Data Science', percentage: 25 },
+    { name: 'Software Engineering', percentage: 20 },
+    { name: 'Information Technology', percentage: 10 }
+  ],
+  overdueFines: [
+    { member: 'Jane Smith', article: 'Clean Architecture', daysOverdue: 4, fineAmount: '$8.00' },
+    { member: 'Alan Turing', article: 'Python for Data Analysis', daysOverdue: 1, fineAmount: '$2.00' }
+  ]
+};
