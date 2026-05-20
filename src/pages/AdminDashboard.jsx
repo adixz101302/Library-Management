@@ -328,7 +328,7 @@ const MembersView = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newMember, setNewMember] = useState({ name: '', email: '', phone: '' });
+  const [newMember, setNewMember] = useState({ name: '', email: '', phone: '', membershipId: '', joinDate: '', active: true, expiryDate: '' });
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -349,17 +349,17 @@ const MembersView = () => {
     setIsSubmitting(true);
     try {
       const result = await libraryService.addMember(newMember);
-      const newId = result?.data?.name || `LIB-${Math.floor(Math.random() * 1000)}`;
+      const newId = result?.data?.name || newMember.membershipId || `LIB-${Math.floor(Math.random() * 1000)}`;
       
       setMembers([...members, {
         id: newId,
         name: newMember.name,
         email: newMember.email,
         activeIssues: 0,
-        status: 'Active'
+        status: newMember.active ? 'Active' : 'Suspended'
       }]);
       setShowModal(false);
-      setNewMember({ name: '', email: '', phone: '' });
+      setNewMember({ name: '', email: '', phone: '', membershipId: '', joinDate: '', active: true, expiryDate: '' });
     } catch (error) {
       console.error("Failed to add member", error);
       alert("Failed to save the member to ERPNext. Please try again.");
@@ -448,7 +448,7 @@ const MembersView = () => {
                 />
               </div>
               
-              <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Phone Number (Optional)</label>
                 <input 
                   type="text" 
@@ -457,6 +457,48 @@ const MembersView = () => {
                   onChange={e => setNewMember({...newMember, phone: e.target.value})}
                   placeholder="e.g. +1 234 567 8900"
                 />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Membership ID (Optional)</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={newMember.membershipId}
+                  onChange={e => setNewMember({...newMember, membershipId: e.target.value})}
+                  placeholder="e.g. LIB-2026-001"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Join Date</label>
+                  <input 
+                    type="date" 
+                    className="form-control" 
+                    value={newMember.joinDate}
+                    onChange={e => setNewMember({...newMember, joinDate: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Expiry Date (Optional)</label>
+                  <input 
+                    type="date" 
+                    className="form-control" 
+                    value={newMember.expiryDate}
+                    onChange={e => setNewMember({...newMember, expiryDate: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input 
+                  type="checkbox" 
+                  id="activeMemberCheck"
+                  checked={newMember.active}
+                  onChange={e => setNewMember({...newMember, active: e.target.checked})}
+                />
+                <label htmlFor="activeMemberCheck" style={{ fontWeight: 500, cursor: 'pointer' }}>Active Member</label>
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem' }}>

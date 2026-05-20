@@ -102,7 +102,10 @@ export const libraryService = {
           full_name: memberData.name,
           email: memberData.email,
           phone: memberData.phone || "",
-          active: 1
+          membership_id: memberData.membershipId || "",
+          join_date: memberData.joinDate || new Date().toISOString().split('T')[0],
+          expiry_date: memberData.expiryDate || "",
+          active: memberData.active ? 1 : 0
         });
         return response.data;
       } catch (error) {
