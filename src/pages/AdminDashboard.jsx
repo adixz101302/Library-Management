@@ -326,6 +326,9 @@ const InventoryView = () => {
 const MembersView = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newMember, setNewMember] = useState({ name: '', email: '', phone: '' });
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -341,10 +344,37 @@ const MembersView = () => {
     fetchMembers();
   }, []);
 
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const result = await libraryService.addMember(newMember);
+      const newId = result?.data?.name || `LIB-${Math.floor(Math.random() * 1000)}`;
+      
+      setMembers([...members, {
+        id: newId,
+        name: newMember.name,
+        email: newMember.email,
+        activeIssues: 0,
+        status: 'Active'
+      }]);
+      setShowModal(false);
+      setNewMember({ name: '', email: '', phone: '' });
+    } catch (error) {
+      console.error("Failed to add member", error);
+      alert("Failed to save the member to ERPNext. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>Member Management</h1>
+        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => setShowModal(true)}>
+          <Plus size={18} /> Add New Member
+        </button>
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -384,6 +414,61 @@ const MembersView = () => {
           </tbody>
         </table>
       </div>
+
+      {showModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '500px', margin: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0 }}>Add New Member</h2>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: 'var(--color-text-muted)' }}>&times;</button>
+            </div>
+            
+            <form onSubmit={handleAddMember}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Full Name</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  required 
+                  value={newMember.name}
+                  onChange={e => setNewMember({...newMember, name: e.target.value})}
+                  placeholder="e.g. John Doe"
+                />
+              </div>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Email Address</label>
+                <input 
+                  type="email" 
+                  className="form-control" 
+                  required 
+                  value={newMember.email}
+                  onChange={e => setNewMember({...newMember, email: e.target.value})}
+                  placeholder="e.g. john@example.com"
+                />
+              </div>
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Phone Number (Optional)</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={newMember.phone}
+                  onChange={e => setNewMember({...newMember, phone: e.target.value})}
+                  placeholder="e.g. +1 234 567 8900"
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)} disabled={isSubmitting}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving to ERPNext...' : 'Save Member'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

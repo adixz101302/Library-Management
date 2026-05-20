@@ -94,6 +94,25 @@ export const libraryService = {
     return [];
   },
 
+  // Add Member
+  addMember: async (memberData) => {
+    if (isConfigured) {
+      try {
+        const response = await api.post('/api/resource/Library Member', {
+          full_name: memberData.name,
+          email: memberData.email,
+          phone: memberData.phone || "",
+          active: 1
+        });
+        return response.data;
+      } catch (error) {
+        console.error("ERPNext Add Member Failed.", error);
+        throw error;
+      }
+    }
+    return new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1000));
+  },
+
   // Fetch Dashboard Stats
   getDashboardStats: async () => {
     if (isConfigured) {
