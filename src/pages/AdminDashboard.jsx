@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Book, Users, ClipboardList, TrendingUp, AlertTriangle, Plus, Send, Settings as SettingsIcon } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
@@ -111,12 +111,24 @@ const DashboardOverview = () => {
 // 2. INVENTORY VIEW (WITH MODAL FORM)
 // ----------------------------------------------------
 const InventoryView = () => {
-  const [books, setBooks] = useState([
-    { id: 'B-101', title: 'Artificial Intelligence: A Modern Approach', author: 'Stuart Russell', category: 'Computer Science', qty: 5, status: 'Available' },
-    { id: 'B-102', title: 'Introduction to Algorithms', author: 'Thomas H. Cormen', category: 'Computer Science', qty: 2, status: 'Issued' },
-    { id: 'B-103', title: 'Database System Concepts', author: 'Abraham Silberschatz', category: 'Information Technology', qty: 3, status: 'Reserved' },
-    { id: 'B-104', title: 'Clean Architecture', author: 'Robert C. Martin', category: 'Software Engineering', qty: 4, status: 'Available' }
-  ]);
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const data = await libraryService.getAllBooks();
+        // Assume qty is 1 for ERPNext records since we don't have a qty field in tabArticle
+        const mappedBooks = data.map(book => ({ ...book, qty: 1 }));
+        setBooks(mappedBooks);
+      } catch (error) {
+        console.error("Failed to load inventory", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooks();
+  }, []);
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newBook, setNewBook] = useState({ title: '', author: '', category: 'Technology', qty: 1, publisher: '', isbn: '', publishedDate: '', price: '', description: '' });
@@ -167,23 +179,33 @@ const InventoryView = () => {
             </tr>
           </thead>
           <tbody>
-            {books.map((book) => (
-              <tr key={book.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{book.id}</td>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{book.title}</td>
-                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{book.author}</td>
-                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{book.category}</td>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{book.qty}</td>
-                <td style={{ padding: '1rem 1.5rem' }}>
-                  <span className={`badge ${
-                    book.status === 'Available' ? 'badge-success' : 
-                    book.status === 'Issued' ? 'badge-danger' : 'badge-reserved'
-                  }`}>
-                    {book.status}
-                  </span>
-                </td>
+            {loading ? (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>Loading inventory from ERPNext...</td>
               </tr>
-            ))}
+            ) : books.length === 0 ? (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>No books found in ERPNext.</td>
+              </tr>
+            ) : (
+              books.map((book) => (
+                <tr key={book.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
+                  <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{book.id}</td>
+                  <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{book.title}</td>
+                  <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{book.author}</td>
+                  <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{book.category}</td>
+                  <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{book.qty}</td>
+                  <td style={{ padding: '1rem 1.5rem' }}>
+                    <span className={`badge ${
+                      book.status === 'Available' ? 'badge-success' : 
+                      book.status === 'Issued' ? 'badge-danger' : 'badge-reserved'
+                    }`}>
+                      {book.status}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
