@@ -358,14 +358,32 @@ const MembersView = () => {
 // 4. RESERVATIONS REQUESTS VIEW (INTERACTIVE STATUS UPDATES)
 // ----------------------------------------------------
 const ReservationsView = () => {
-  const [requests, setRequests] = useState([
-    { id: 'REQ-01', member: 'Alice Smith', book: 'Clean Code', date: '2026-05-18', status: 'Pending' },
-    { id: 'REQ-02', member: 'Bob Jones', book: 'Dune', date: '2026-05-17', status: 'Approved' },
-    { id: 'REQ-03', member: 'Charlie Brown', book: '1984', date: '2026-05-16', status: 'Pending' }
-  ]);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const updateStatus = (id, newStatus) => {
-    setRequests(requests.map(req => req.id === id ? { ...req, status: newStatus } : req));
+  useEffect(() => {
+    fetchReservations();
+  }, []);
+
+  const fetchReservations = async () => {
+    try {
+      const data = await libraryService.getAllReservations();
+      setRequests(data);
+    } catch (error) {
+      console.error("Failed to load reservations", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateStatus = async (id, newStatus) => {
+    try {
+      await libraryService.updateIssueRecordStatus(id, newStatus);
+      // Optimistically update the UI
+      setRequests(requests.map(req => req.id === id ? { ...req, status: newStatus } : req));
+    } catch (error) {
+      alert("Failed to update status in ERPNext.");
+    }
   };
 
   return (
@@ -387,32 +405,42 @@ const ReservationsView = () => {
             </tr>
           </thead>
           <tbody>
-            {requests.map((req) => (
-              <tr key={req.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{req.id}</td>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{req.member}</td>
-                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{req.book}</td>
-                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{req.date}</td>
-                <td style={{ padding: '1rem 1.5rem' }}>
-                  <span className={`badge ${
-                    req.status === 'Approved' ? 'badge-success' : 
-                    req.status === 'Rejected' ? 'badge-danger' : 'badge-reserved'
-                  }`}>
-                    {req.status}
-                  </span>
-                </td>
-                <td style={{ padding: '1rem 1.5rem' }}>
-                  {req.status === 'Pending' ? (
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => updateStatus(req.id, 'Approved')}>Approve</button>
-                      <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => updateStatus(req.id, 'Rejected')}>Reject</button>
-                    </div>
-                  ) : (
-                    <span className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Processed</span>
-                  )}
-                </td>
+            {loading ? (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>Loading reservations from ERPNext...</td>
               </tr>
-            ))}
+            ) : requests.length === 0 ? (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>No reservations found.</td>
+              </tr>
+            ) : (
+              requests.map((req) => (
+                <tr key={req.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
+                  <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{req.id}</td>
+                  <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{req.member}</td>
+                  <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{req.book}</td>
+                  <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{req.date}</td>
+                  <td style={{ padding: '1rem 1.5rem' }}>
+                    <span className={`badge ${
+                      req.status === 'Approved' || req.status === 'Issued' ? 'badge-success' : 
+                      req.status === 'Rejected' ? 'badge-danger' : 'badge-reserved'
+                    }`}>
+                      {req.status}
+                    </span>
+                  </td>
+                  <td style={{ padding: '1rem 1.5rem' }}>
+                    {req.status === 'Pending' ? (
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => updateStatus(req.id, 'Issued')}>Approve</button>
+                        <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => updateStatus(req.id, 'Rejected')}>Reject</button>
+                      </div>
+                    ) : (
+                      <span className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Processed</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -424,14 +452,27 @@ const ReservationsView = () => {
 // 5. OVERDUE VIEW (WITH TOAST REMINDERS)
 // ----------------------------------------------------
 const OverdueView = () => {
-  const [overdues] = useState([
-    { id: 'TRX-901', member: 'Jane Smith', email: 'jane@university.edu', book: 'Clean Architecture', days: 4, fine: '$8.00' },
-    { id: 'TRX-902', member: 'Alan Turing', email: 'turing@university.edu', book: 'Python for Data Analysis', days: 1, fine: '$2.00' }
-  ]);
+  const [overdues, setOverdues] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
 
+  useEffect(() => {
+    const fetchOverdues = async () => {
+      try {
+        const data = await libraryService.getOverdueReturns();
+        setOverdues(data);
+      } catch (error) {
+        console.error("Failed to load overdue returns", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOverdues();
+  }, []);
+
   const triggerReminder = (email) => {
-    setToastMessage(`Email notification sent successfully to ${email}!`);
+    // In a real app, this would call an ERPNext notification API
+    setToastMessage(`Email notification sent successfully to ${email || 'member'}!`);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -452,29 +493,39 @@ const OverdueView = () => {
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ backgroundColor: 'var(--color-background)', borderBottom: '1px solid var(--color-background)' }}>
-              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Transaction</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Transaction ID</th>
               <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Member</th>
               <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Book Title</th>
-              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Days Overdue</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Due Date</th>
               <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Calculated Fine</th>
               <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {overdues.map((item) => (
-              <tr key={item.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{item.id}</td>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{item.member}</td>
-                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{item.book}</td>
-                <td style={{ padding: '1rem 1.5rem', color: 'var(--color-danger)', fontWeight: 600 }}>{item.days} days</td>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{item.fine}</td>
-                <td style={{ padding: '1rem 1.5rem' }}>
-                  <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => triggerReminder(item.email)}>
-                    <Send size={12} /> Send Alert
-                  </button>
-                </td>
+            {loading ? (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>Loading overdue records from ERPNext...</td>
               </tr>
-            ))}
+            ) : overdues.length === 0 ? (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>No overdue books found.</td>
+              </tr>
+            ) : (
+              overdues.map((item) => (
+                <tr key={item.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
+                  <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{item.id}</td>
+                  <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{item.member}</td>
+                  <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{item.book}</td>
+                  <td style={{ padding: '1rem 1.5rem', color: 'var(--color-danger)', fontWeight: 600 }}>{item.dueDate}</td>
+                  <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{item.fine}</td>
+                  <td style={{ padding: '1rem 1.5rem' }}>
+                    <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => triggerReminder(item.member)}>
+                      <Send size={12} /> Send Alert
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

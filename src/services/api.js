@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { academicBooks, mockIssueRecords, mockReservations, mockReports } from '../data/mockData';
+
 
 const ERPNEXT_URL = import.meta.env.VITE_ERPNEXT_URL;
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -38,11 +38,36 @@ export const libraryService = {
           coverImage: null
         }));
       } catch (error) {
-        console.error("ERPNext API Failed (Books). Falling back to mock data.", error);
+        console.error("ERPNext API Failed (Books).", error);
       }
     }
-    console.warn("Using mock catalog data.");
-    return academicBooks;
+    return [];
+  },
+
+  // Fetch Single Book
+  getBookById: async (id) => {
+    if (isConfigured) {
+      try {
+        const response = await api.get(`/api/resource/Article/${id}`);
+        const item = response.data.data;
+        return {
+          id: item.name,
+          title: item.article_name || item.name,
+          author: item.author || "Unknown Author",
+          category: item.category || "General",
+          description: item.description || "No description available.",
+          publisher: item.publisher || "Unknown",
+          isbn: item.isbn || "N/A",
+          publishedDate: item.published_date || "Unknown",
+          price: item.price || 0,
+          status: item.available ? 'Available' : 'Issued',
+          coverImage: null
+        };
+      } catch (error) {
+        console.error(`ERPNext API Failed to fetch Book ${id}.`, error);
+      }
+    }
+    return null;
   },
 
   // Fetch Members
@@ -126,10 +151,10 @@ export const libraryService = {
           returnDate: item.return_date || '-'
         }));
       } catch (error) {
-        console.error("ERPNext API Failed (Circulations). Falling back to mock data.", error);
+        console.error("ERPNext API Failed (Circulations).", error);
       }
     }
-    return mockIssueRecords;
+    return [];
   },
 
   // Submit Reservation
@@ -193,10 +218,76 @@ export const libraryService = {
           status: res.status
         }));
       } catch (error) {
-        console.error("ERPNext API Failed (Reservations). Falling back to mock data.", error);
+        console.error("ERPNext API Failed (My Reservations).", error);
       }
     }
-    return mockReservations;
+    return [];
+  },
+
+  // Fetch All Reservations (Admin)
+  getAllReservations: async () => {
+    if (isConfigured) {
+      try {
+        const response = await api.get('/api/resource/Issue Record', {
+          params: { 
+            fields: '["name", "member", "article", "issue_date", "status"]',
+            limit_page_length: 500,
+            order_by: 'creation desc'
+          }
+        });
+        return response.data.data.map(res => ({
+          id: res.name,
+          member: res.member,
+          book: res.article,
+          date: res.issue_date || '-',
+          status: res.status
+        }));
+      } catch (error) {
+        console.error("ERPNext API Failed (All Reservations).", error);
+      }
+    }
+    return [];
+  },
+
+  // Fetch Overdue Returns (Admin)
+  getOverdueReturns: async () => {
+    if (isConfigured) {
+      try {
+        const response = await api.get('/api/resource/Issue Record', {
+          filters: '[["status", "=", "Overdue"]]',
+          params: { 
+            fields: '["name", "member", "article", "return_date", "fine_amount"]',
+            limit_page_length: 500
+          }
+        });
+        return response.data.data.map(res => ({
+          id: res.name,
+          member: res.member,
+          book: res.article,
+          dueDate: res.return_date || '-',
+          fine: res.fine_amount ? `$${parseFloat(res.fine_amount).toFixed(2)}` : '$0.00'
+        }));
+      } catch (error) {
+        console.error("ERPNext API Failed (Overdue Returns).", error);
+      }
+    }
+    return [];
+  },
+
+  // Update Issue Record Status (Admin)
+  updateIssueRecordStatus: async (id, status) => {
+    if (isConfigured) {
+      try {
+        const response = await api.put(`/api/resource/Issue Record/${id}`, {
+          status: status
+        });
+        return response.data;
+      } catch (error) {
+        console.error(`ERPNext Failed to update status for ${id}.`, error);
+        throw error;
+      }
+    }
+    return { success: true };
   },
 
   // Fetch Library Reports
@@ -252,9 +343,9 @@ export const libraryService = {
           overdueFines
         };
       } catch (error) {
-        console.error("ERPNext API Failed (Reports). Falling back to mock data.", error);
+        console.error("ERPNext API Failed (Reports).", error);
       }
     }
-    return mockReports;
+    return { finesCollected: '$0.00', activeMembers: '0', mostPopularCategory: 'N/A', categoryBreakdown: {}, overdueFines: [] };
   }
 };

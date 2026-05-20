@@ -1,21 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Calendar, BookOpen, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import { libraryService } from '../services/api';
-
-const mockBookDetails = {
-  id: '1',
-  title: 'The Design of Everyday Things',
-  author: 'Don Norman',
-  category: 'Design',
-  isbn: '978-0465050659',
-  publisher: 'Basic Books',
-  publishDate: '2013-11-05',
-  pages: 368,
-  description: "Even the smartest among us can feel inept as we fail to figure out which light switch or oven burner to turn on, or whether to push, pull, or slide a door. The fault, argues this ingenious—even liberating—book, lies not in ourselves, but in product design that ignores the needs of users and the principles of cognitive psychology. The problems range from ambiguous and hidden controls to arbitrary relationships between controls and functions, coupled with a lack of feedback or other assistance and unreasonable demands on memorization. The Design of Everyday Things shows that good, usable design is possible. The rules are simple: make things visible, exploit natural relationships that couple function and control, and make intelligent use of constraints. The goal: guide the user effortlessly to the right action on the right control at the right time.",
-  status: 'Available',
-  coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=800'
-};
 
 const BookDetails = () => {
   const { id } = useParams();
@@ -26,8 +12,22 @@ const BookDetails = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  // In a real app, you would fetch details using `id`
-  const book = mockBookDetails;
+  const [book, setBook] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBook = async () => {
+      try {
+        const data = await libraryService.getBookById(id);
+        setBook(data);
+      } catch (error) {
+        console.error("Failed to load book", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBook();
+  }, [id]);
 
   const handleReserve = async (e) => {
     e.preventDefault();
@@ -49,6 +49,14 @@ const BookDetails = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return <div className="container main-content" style={{ textAlign: 'center', padding: '5rem' }}>Loading book details from ERPNext...</div>;
+  }
+
+  if (!book) {
+    return <div className="container main-content" style={{ textAlign: 'center', padding: '5rem' }}>Book not found.</div>;
+  }
 
   return (
     <div className="container main-content">
