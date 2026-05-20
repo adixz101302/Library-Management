@@ -163,7 +163,7 @@ export const libraryService = {
       try {
         const response = await api.post('/api/resource/Issue Record', {
           article: reservationData.articleId,
-          member: reservationData.memberEmail, 
+          member: reservationData.memberName, 
           issue_date: new Date().toISOString().split('T')[0],
           status: 'Pending'
         });

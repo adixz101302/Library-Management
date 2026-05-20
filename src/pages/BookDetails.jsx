@@ -36,6 +36,7 @@ const BookDetails = () => {
     try {
       await libraryService.reserveBook({
         articleId: book.id,
+        memberName: reservationData.name,
         memberEmail: reservationData.email
       });
       setIsSuccess(true);
