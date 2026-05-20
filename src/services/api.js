@@ -135,6 +135,11 @@ export const libraryService = {
           article_name: bookData.title,
           author: bookData.author,
           category: bookData.category,
+          description: bookData.description || "",
+          publisher: bookData.publisher || "",
+          isbn: bookData.isbn || "",
+          published_date: bookData.publishedDate || null,
+          price: parseFloat(bookData.price) || 0.0,
           available: 1
         });
         return response.data;

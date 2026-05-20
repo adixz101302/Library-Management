@@ -119,7 +119,7 @@ const InventoryView = () => {
   ]);
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newBook, setNewBook] = useState({ title: '', author: '', category: 'Technology', qty: 1 });
+  const [newBook, setNewBook] = useState({ title: '', author: '', category: 'Technology', qty: 1, publisher: '', isbn: '', publishedDate: '', price: '', description: '' });
 
   const handleAddBook = async (e) => {
     e.preventDefault();
@@ -136,7 +136,7 @@ const InventoryView = () => {
         status: 'Available'
       }]);
       setShowModal(false);
-      setNewBook({ title: '', author: '', category: 'Technology', qty: 1 });
+      setNewBook({ title: '', author: '', category: 'Technology', qty: 1, publisher: '', isbn: '', publishedDate: '', price: '', description: '' });
     } catch (error) {
       console.error("Failed to add book", error);
       alert("Failed to save the book to ERPNext. Please try again.");
@@ -190,21 +190,55 @@ const InventoryView = () => {
 
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="card" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2>Add New Book</h2>
               <button onClick={() => setShowModal(false)} style={{ fontSize: '1.5rem', lineHeight: 1 }}>&times;</button>
             </div>
             <form onSubmit={handleAddBook}>
-              <div className="input-group">
-                <label className="input-label">Title</label>
-                <input type="text" className="input-field" required value={newBook.title} onChange={e => setNewBook({...newBook, title: e.target.value})} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="input-group">
+                  <label className="input-label">Title</label>
+                  <input type="text" className="input-field" required value={newBook.title} onChange={e => setNewBook({...newBook, title: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Author</label>
+                  <input type="text" className="input-field" required value={newBook.author} onChange={e => setNewBook({...newBook, author: e.target.value})} />
+                </div>
               </div>
+
               <div className="input-group">
-                <label className="input-label">Author</label>
-                <input type="text" className="input-field" required value={newBook.author} onChange={e => setNewBook({...newBook, author: e.target.value})} />
+                <label className="input-label">Description</label>
+                <textarea className="input-field" rows="3" value={newBook.description} onChange={e => setNewBook({...newBook, description: e.target.value})}></textarea>
               </div>
-              <div className="input-group">
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="input-group">
+                  <label className="input-label">Publisher</label>
+                  <input type="text" className="input-field" value={newBook.publisher} onChange={e => setNewBook({...newBook, publisher: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">ISBN</label>
+                  <input type="text" className="input-field" value={newBook.isbn} onChange={e => setNewBook({...newBook, isbn: e.target.value})} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="input-group">
+                  <label className="input-label">Published Date</label>
+                  <input type="date" className="input-field" value={newBook.publishedDate} onChange={e => setNewBook({...newBook, publishedDate: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Price ($)</label>
+                  <input type="number" step="0.01" className="input-field" value={newBook.price} onChange={e => setNewBook({...newBook, price: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Quantity</label>
+                  <input type="number" min="1" className="input-field" required value={newBook.qty} onChange={e => setNewBook({...newBook, qty: e.target.value})} />
+                </div>
+              </div>
+
+              <div className="input-group" style={{ marginBottom: '2rem' }}>
                 <label className="input-label">Category</label>
                 <select className="input-field" value={newBook.category} onChange={e => setNewBook({...newBook, category: e.target.value})}>
                   <option value="Technology">Technology</option>
@@ -213,10 +247,6 @@ const InventoryView = () => {
                   <option value="Novel">Novel</option>
                   <option value="History">History</option>
                 </select>
-              </div>
-              <div className="input-group" style={{ marginBottom: '2rem' }}>
-                <label className="input-label">Quantity</label>
-                <input type="number" min="1" className="input-field" required value={newBook.qty} onChange={e => setNewBook({...newBook, qty: e.target.value})} />
               </div>
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)} disabled={isSubmitting}>Cancel</button>
