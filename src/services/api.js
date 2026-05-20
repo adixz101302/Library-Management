@@ -186,8 +186,8 @@ export const libraryService = {
         const response = await api.post('/api/resource/Book Reservation', {
           article: reservationData.articleId,
           member: reservationData.memberName, 
-          reservation_date: new Date().toISOString().split('T')[0],
-          status: 'Pending'
+          reservation_date: reservationData.reservationDate || new Date().toISOString().split('T')[0],
+          status: reservationData.status || 'Pending'
         });
         return response.data;
       } catch (error) {
