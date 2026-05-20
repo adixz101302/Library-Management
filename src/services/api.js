@@ -122,14 +122,14 @@ export const libraryService = {
           overdueBooks: overdueBooks.toLocaleString()
         };
       } catch (error) {
-        console.error("ERPNext API Failed (Stats). Falling back to mock data.", error);
+        console.error("ERPNext API Failed (Stats).", error);
       }
     }
     return {
-      totalArticles: "15,240",
-      availableBooks: "11,850",
-      issuedBooks: "3,210",
-      overdueBooks: "180"
+      totalArticles: "0",
+      availableBooks: "0",
+      issuedBooks: "0",
+      overdueBooks: "0"
     };
   },
 

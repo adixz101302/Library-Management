@@ -9,6 +9,28 @@ import { libraryService } from '../services/api';
 // 1. DASHBOARD OVERVIEW VIEW
 // ----------------------------------------------------
 const DashboardOverview = () => {
+  const [stats, setStats] = useState({ totalArticles: '0', availableBooks: '0', issuedBooks: '0', overdueBooks: '0' });
+  const [recentReservations, setRecentReservations] = useState([]);
+  const [overdueReturns, setOverdueReturns] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const statsData = await libraryService.getLibraryStats();
+        setStats(statsData);
+        
+        const resData = await libraryService.getAllReservations();
+        setRecentReservations(resData.slice(0, 3));
+        
+        const overdueData = await libraryService.getOverdueReturns();
+        setOverdueReturns(overdueData.slice(0, 3));
+      } catch (error) {
+        console.error("Failed to load dashboard overview data", error);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -17,10 +39,10 @@ const DashboardOverview = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-6" style={{ marginBottom: '3rem' }}>
-        <StatCard title="Total Inventory" value="12,450" icon={Book} trend="+124" />
-        <StatCard title="Active Members" value="2,845" icon={Users} trend="+12" />
-        <StatCard title="Total Reservations" value="156" icon={ClipboardList} trend="+24" />
-        <StatCard title="Monthly Circulation" value="1,240" icon={TrendingUp} trend="+8%" />
+        <StatCard title="Total Inventory" value={stats.totalArticles} icon={Book} trend="+2%" />
+        <StatCard title="Available Books" value={stats.availableBooks} icon={ClipboardList} trend="+5%" />
+        <StatCard title="Issued Books" value={stats.issuedBooks} icon={Users} trend="+12" />
+        <StatCard title="Overdue Books" value={stats.overdueBooks} icon={AlertTriangle} trend="-3%" />
       </div>
 
       <div className="grid grid-cols-2 gap-6" style={{ marginBottom: '3rem' }}>
@@ -63,15 +85,21 @@ const DashboardOverview = () => {
               </tr>
             </thead>
             <tbody>
-              {[{ name: 'Alice Smith', book: 'Clean Code', status: 'Pending' }, { name: 'Bob Jones', book: 'Dune', status: 'Approved' }, { name: 'Charlie Brown', book: '1984', status: 'Pending' }].map((req, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid var(--color-background)' }}>
-                  <td style={{ padding: '1rem 0', fontWeight: 500 }}>{req.name}</td>
-                  <td style={{ padding: '1rem 0', color: 'var(--color-text-secondary)' }}>{req.book}</td>
-                  <td style={{ padding: '1rem 0' }}>
-                    <span className={`badge ${req.status === 'Approved' ? 'badge-success' : 'badge-warning'}`}>{req.status}</span>
-                  </td>
+              {recentReservations.length === 0 ? (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>No recent reservations found.</td>
                 </tr>
-              ))}
+              ) : (
+                recentReservations.map((req, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--color-background)' }}>
+                    <td style={{ padding: '1rem 0', fontWeight: 500 }}>{req.member}</td>
+                    <td style={{ padding: '1rem 0', color: 'var(--color-text-secondary)' }}>{req.book}</td>
+                    <td style={{ padding: '1rem 0' }}>
+                      <span className={`badge ${req.status === 'Approved' ? 'badge-success' : req.status === 'Cancelled' ? 'badge-danger' : 'badge-warning'}`}>{req.status}</span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -90,15 +118,21 @@ const DashboardOverview = () => {
               </tr>
             </thead>
             <tbody>
-              {[{ name: 'David Lee', book: 'Sapiens', days: 5 }, { name: 'Emma Wilson', book: 'Atomic Habits', days: 2 }].map((req, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid var(--color-background)' }}>
-                  <td style={{ padding: '1rem 0', fontWeight: 500 }}>{req.name}</td>
-                  <td style={{ padding: '1rem 0', color: 'var(--color-text-secondary)' }}>{req.book}</td>
-                  <td style={{ padding: '1rem 0' }}>
-                    <span className="badge badge-danger">{req.days} days</span>
-                  </td>
+              {overdueReturns.length === 0 ? (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>No overdue books found.</td>
                 </tr>
-              ))}
+              ) : (
+                overdueReturns.map((req, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--color-background)' }}>
+                    <td style={{ padding: '1rem 0', fontWeight: 500 }}>{req.member}</td>
+                    <td style={{ padding: '1rem 0', color: 'var(--color-text-secondary)' }}>{req.book}</td>
+                    <td style={{ padding: '1rem 0' }}>
+                      <span className="badge badge-danger">{req.dueDate}</span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
