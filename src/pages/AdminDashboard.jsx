@@ -16,7 +16,7 @@ const DashboardOverview = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const statsData = await libraryService.getLibraryStats();
+        const statsData = await libraryService.getDashboardStats();
         setStats(statsData);
         
         const resData = await libraryService.getAllReservations();
