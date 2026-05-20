@@ -290,12 +290,22 @@ const InventoryView = () => {
 // 3. MEMBERS VIEW
 // ----------------------------------------------------
 const MembersView = () => {
-  const [members] = useState([
-    { id: 'MEM-001', name: 'John Doe', email: 'john@university.edu', activeIssues: 2, status: 'Active' },
-    { id: 'MEM-002', name: 'Jane Smith', email: 'jane@university.edu', activeIssues: 0, status: 'Active' },
-    { id: 'MEM-003', name: 'Alan Turing', email: 'turing@university.edu', activeIssues: 4, status: 'Suspended' },
-    { id: 'MEM-004', name: 'Grace Hopper', email: 'hopper@university.edu', activeIssues: 1, status: 'Active' }
-  ]);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const data = await libraryService.getAllMembers();
+        setMembers(data);
+      } catch (error) {
+        console.error("Failed to load members", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMembers();
+  }, []);
 
   return (
     <div>
@@ -315,9 +325,18 @@ const MembersView = () => {
             </tr>
           </thead>
           <tbody>
-            {members.map((mem) => (
-              <tr key={mem.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{mem.id}</td>
+            {loading ? (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>Loading members from ERPNext...</td>
+              </tr>
+            ) : members.length === 0 ? (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>No members found.</td>
+              </tr>
+            ) : (
+              members.map((mem) => (
+                <tr key={mem.id} style={{ borderBottom: '1px solid var(--color-background)' }}>
+                  <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{mem.id}</td>
                 <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{mem.name}</td>
                 <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{mem.email}</td>
                 <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{mem.activeIssues}</td>
@@ -327,7 +346,7 @@ const MembersView = () => {
                   </span>
                 </td>
               </tr>
-            ))}
+            )))}
           </tbody>
         </table>
       </div>

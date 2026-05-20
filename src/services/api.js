@@ -45,6 +45,30 @@ export const libraryService = {
     return academicBooks;
   },
 
+  // Fetch Members
+  getAllMembers: async () => {
+    if (isConfigured) {
+      try {
+        const response = await api.get('/api/resource/Library Member', {
+          params: { 
+            fields: '["name", "full_name", "email", "active", "membership_id"]',
+            limit_page_length: 500
+          }
+        });
+        return response.data.data.map(item => ({
+          id: item.membership_id || item.name,
+          name: item.full_name || item.name,
+          email: item.email || "No Email",
+          activeIssues: 0, // Would need a separate query to fetch active issues count
+          status: item.active ? 'Active' : 'Suspended'
+        }));
+      } catch (error) {
+        console.error("ERPNext API Failed (Members).", error);
+      }
+    }
+    return [];
+  },
+
   // Fetch Dashboard Stats
   getDashboardStats: async () => {
     if (isConfigured) {
