@@ -13,7 +13,8 @@ const api = isConfigured ? axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'Authorization': `token ${API_KEY}:${API_SECRET}` 
+    'Authorization': `token ${API_KEY}:${API_SECRET}`,
+    'ngrok-skip-browser-warning': '69420'
   }
 }) : null;
 
