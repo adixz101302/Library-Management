@@ -165,7 +165,7 @@ export const libraryService = {
           article: reservationData.articleId,
           member: reservationData.memberName, 
           issue_date: new Date().toISOString().split('T')[0],
-          status: 'Pending'
+          status: 'Issued'
         });
         return response.data;
       } catch (error) {
