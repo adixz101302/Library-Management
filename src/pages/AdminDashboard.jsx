@@ -521,9 +521,26 @@ const MembersView = () => {
 const ReservationsView = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [books, setBooks] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [newReservation, setNewReservation] = useState({
+    article: '',
+    member: '',
+    reservationDate: new Date().toISOString().split('T')[0],
+    status: 'Pending'
+  });
 
   useEffect(() => {
     fetchReservations();
+    // Fetch books and members for dropdowns
+    Promise.all([libraryService.getAllBooks(), libraryService.getAllMembers()])
+      .then(([booksData, membersData]) => {
+        setBooks(booksData);
+        setMembers(membersData);
+      })
+      .catch(err => console.error("Failed to load dropdown data", err));
   }, []);
 
   const fetchReservations = async () => {
@@ -534,6 +551,34 @@ const ReservationsView = () => {
       console.error("Failed to load reservations", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddReservation = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const result = await libraryService.reserveBook({
+        articleId: newReservation.article,
+        memberName: newReservation.member,
+        reservationDate: newReservation.reservationDate,
+        status: newReservation.status
+      });
+      const newId = result?.data?.name || `RES-${Date.now()}`;
+      setRequests([{
+        id: newId,
+        member: newReservation.member,
+        book: newReservation.article,
+        date: newReservation.reservationDate,
+        status: newReservation.status
+      }, ...requests]);
+      setShowModal(false);
+      setNewReservation({ article: '', member: '', reservationDate: new Date().toISOString().split('T')[0], status: 'Pending' });
+    } catch (error) {
+      console.error("Failed to add reservation", error);
+      alert("Failed to save reservation to ERPNext. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -551,6 +596,9 @@ const ReservationsView = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>Reservation Requests</h1>
+        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => setShowModal(true)}>
+          <Plus size={18} /> New Reservation
+        </button>
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -605,6 +653,84 @@ const ReservationsView = () => {
           </tbody>
         </table>
       </div>
+
+      {showModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '520px', margin: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0 }}>New Book Reservation</h2>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: 'var(--color-text-muted)' }}>&times;</button>
+            </div>
+
+            <form onSubmit={handleAddReservation}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Article</label>
+                <select
+                  className="form-control"
+                  required
+                  value={newReservation.article}
+                  onChange={e => setNewReservation({...newReservation, article: e.target.value})}
+                  style={{ appearance: 'auto' }}
+                >
+                  <option value="">-- Select Article --</option>
+                  {books.map(book => (
+                    <option key={book.id} value={book.id}>{book.title || book.id}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Member</label>
+                <select
+                  className="form-control"
+                  required
+                  value={newReservation.member}
+                  onChange={e => setNewReservation({...newReservation, member: e.target.value})}
+                  style={{ appearance: 'auto' }}
+                >
+                  <option value="">-- Select Member --</option>
+                  {members.map(mem => (
+                    <option key={mem.id} value={mem.name}>{mem.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Reservation Date</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  required
+                  value={newReservation.reservationDate}
+                  onChange={e => setNewReservation({...newReservation, reservationDate: e.target.value})}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Status</label>
+                <select
+                  className="form-control"
+                  value={newReservation.status}
+                  onChange={e => setNewReservation({...newReservation, status: e.target.value})}
+                  style={{ appearance: 'auto' }}
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Cancelled">Cancelled</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)} disabled={isSubmitting}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving to ERPNext...' : 'Save Reservation'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
