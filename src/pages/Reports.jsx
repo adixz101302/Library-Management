@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, DollarSign, AlertTriangle, TrendingUp } from 'lucide-react';
+import { BarChart3, Users, DollarSign, AlertTriangle, TrendingUp, Printer } from 'lucide-react';
 import StatCard from '../components/shared/StatCard';
 import { libraryService } from '../services/api';
 
@@ -32,9 +32,18 @@ const Reports = () => {
 
   return (
     <div className="container main-content">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
-        <BarChart3 size={28} color="var(--color-primary)" />
-        <h1 style={{ marginBottom: 0 }}>Library Reports</h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <BarChart3 size={28} color="var(--color-primary)" />
+          <h1 style={{ marginBottom: 0 }}>Library Reports</h1>
+        </div>
+        <button
+          className="btn btn-secondary"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          onClick={() => window.print()}
+        >
+          <Printer size={16} /> Print / Save as PDF
+        </button>
       </div>
 
       {/* Top Level KPIs */}

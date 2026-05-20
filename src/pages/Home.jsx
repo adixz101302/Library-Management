@@ -141,13 +141,13 @@ const Home = () => {
                   <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Circulation and inventory reports.</p>
                 </div>
               </div>
-              <div className="feature-card">
+              <a href="/reports" className="feature-card" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
                 <div className="feature-icon"><Printer size={20} /></div>
                 <div>
                   <h4 style={{ marginBottom: '0.25rem' }}>Print Formats</h4>
                   <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Customizable ID and receipt printing.</p>
                 </div>
-              </div>
+              </a>
             </div>
           </section>
         </div>

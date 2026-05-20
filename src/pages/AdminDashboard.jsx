@@ -12,6 +12,7 @@ const DashboardOverview = () => {
   const [stats, setStats] = useState({ totalArticles: '0', availableBooks: '0', issuedBooks: '0', overdueBooks: '0' });
   const [recentReservations, setRecentReservations] = useState([]);
   const [overdueReturns, setOverdueReturns] = useState([]);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,11 +32,97 @@ const DashboardOverview = () => {
     fetchData();
   }, []);
 
+  const handleGenerateReport = async () => {
+    setGenerating(true);
+    try {
+      const [allReservations, overdues, allBooks, members] = await Promise.all([
+        libraryService.getAllReservations(),
+        libraryService.getOverdueReturns(),
+        libraryService.getAllBooks(),
+        libraryService.getAllMembers()
+      ]);
+      const now = new Date().toLocaleString();
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LibraryERP - Full Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; color: #111; }
+    h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
+    h2 { color: #3498db; margin-top: 2rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th { background: #3498db; color: white; padding: 0.6rem 1rem; text-align: left; }
+    td { padding: 0.6rem 1rem; border-bottom: 1px solid #eee; }
+    tr:hover td { background: #f9f9f9; }
+    .badge { padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-success { background: #d4edda; color: #155724; }
+    .badge-danger { background: #f8d7da; color: #721c24; }
+    .badge-warning { background: #fff3cd; color: #856404; }
+    .stats { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+    .stat-box { border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.5rem; min-width: 160px; }
+    .stat-box h3 { margin: 0; font-size: 1.5rem; color: #3498db; }
+    .stat-box p { margin: 0.25rem 0 0; color: #666; font-size: 0.85rem; }
+    @media print { body { padding: 0; } button { display: none; } }
+  </style>
+</head>
+<body>
+  <h1>📚 LibraryERP - Library Management Report</h1>
+  <p style="color:#666">Generated: ${now}</p>
+  <button onclick="window.print()" style="padding:0.5rem 1rem;background:#3498db;color:white;border:none;border-radius:6px;cursor:pointer;margin-bottom:1rem">🖨️ Print / Save as PDF</button>
+
+  <h2>📊 Summary Statistics</h2>
+  <div class="stats">
+    <div class="stat-box"><h3>${stats.totalArticles}</h3><p>Total Articles</p></div>
+    <div class="stat-box"><h3>${stats.availableBooks}</h3><p>Available Books</p></div>
+    <div class="stat-box"><h3>${stats.issuedBooks}</h3><p>Issued Books</p></div>
+    <div class="stat-box"><h3>${stats.overdueBooks}</h3><p>Overdue Books</p></div>
+    <div class="stat-box"><h3>${members.length}</h3><p>Total Members</p></div>
+  </div>
+
+  <h2>📋 All Reservations (${allReservations.length})</h2>
+  <table>
+    <thead><tr><th>Reservation ID</th><th>Member</th><th>Book</th><th>Date</th><th>Status</th></tr></thead>
+    <tbody>${allReservations.map(r => `<tr><td>${r.id}</td><td>${r.member}</td><td>${r.book}</td><td>${r.date}</td><td>${r.status}</td></tr>`).join('')}</tbody>
+  </table>
+
+  <h2>⚠️ Overdue Returns (${overdues.length})</h2>
+  <table>
+    <thead><tr><th>Record ID</th><th>Member</th><th>Book</th><th>Due Date</th><th>Fine</th></tr></thead>
+    <tbody>${overdues.map(o => `<tr><td>${o.id}</td><td>${o.member}</td><td>${o.book}</td><td>${o.dueDate}</td><td>${o.fine}</td></tr>`).join('')}</tbody>
+  </table>
+
+  <h2>📦 Book Inventory (${allBooks.length})</h2>
+  <table>
+    <thead><tr><th>Book ID</th><th>Title</th><th>Author</th><th>Category</th><th>Status</th></tr></thead>
+    <tbody>${allBooks.map(b => `<tr><td>${b.id}</td><td>${b.title}</td><td>${b.author}</td><td>${b.category}</td><td>${b.status}</td></tr>`).join('')}</tbody>
+  </table>
+
+  <h2>👥 Members (${members.length})</h2>
+  <table>
+    <thead><tr><th>Member ID</th><th>Name</th><th>Email</th><th>Status</th></tr></thead>
+    <tbody>${members.map(m => `<tr><td>${m.id}</td><td>${m.name}</td><td>${m.email}</td><td>${m.status}</td></tr>`).join('')}</tbody>
+  </table>
+</body>
+</html>`;
+      const win = window.open('', '_blank');
+      win.document.write(html);
+      win.document.close();
+    } catch (err) {
+      console.error('Failed to generate report', err);
+      alert('Failed to generate report. Please try again.');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>Dashboard Overview</h1>
-        <button className="btn btn-primary">Generate Report</button>
+        <button className="btn btn-primary" onClick={handleGenerateReport} disabled={generating}>
+          {generating ? 'Generating...' : 'Generate Report'}
+        </button>
       </div>
 
       <div className="grid grid-cols-4 gap-6" style={{ marginBottom: '3rem' }}>
