@@ -161,11 +161,11 @@ export const libraryService = {
   reserveBook: async (reservationData) => {
     if (isConfigured) {
       try {
-        const response = await api.post('/api/resource/Issue Record', {
+        const response = await api.post('/api/resource/Book Reservation', {
           article: reservationData.articleId,
           member: reservationData.memberName, 
-          issue_date: new Date().toISOString().split('T')[0],
-          status: 'Issued'
+          reservation_date: new Date().toISOString().split('T')[0],
+          status: 'Pending'
         });
         return response.data;
       } catch (error) {
@@ -204,17 +204,17 @@ export const libraryService = {
   getMyReservations: async () => {
     if (isConfigured) {
       try {
-        const response = await api.get('/api/resource/Issue Record', {
+        const response = await api.get('/api/resource/Book Reservation', {
           params: { 
-            fields: '["name", "article", "creation", "return_date", "status"]',
+            fields: '["name", "article", "reservation_date", "status"]',
             limit_page_length: 50
           }
         });
         return response.data.data.map(res => ({
           id: res.name,
           article: res.article,
-          date: res.creation.split(' ')[0],
-          expectedAvailability: res.return_date || 'Pending',
+          date: res.reservation_date || '-',
+          expectedAvailability: 'Pending',
           status: res.status
         }));
       } catch (error) {
@@ -228,9 +228,9 @@ export const libraryService = {
   getAllReservations: async () => {
     if (isConfigured) {
       try {
-        const response = await api.get('/api/resource/Issue Record', {
+        const response = await api.get('/api/resource/Book Reservation', {
           params: { 
-            fields: '["name", "member", "article", "issue_date", "status"]',
+            fields: '["name", "member", "article", "reservation_date", "status"]',
             limit_page_length: 500,
             order_by: 'creation desc'
           }
@@ -239,7 +239,7 @@ export const libraryService = {
           id: res.name,
           member: res.member,
           book: res.article,
-          date: res.issue_date || '-',
+          date: res.reservation_date || '-',
           status: res.status
         }));
       } catch (error) {
@@ -272,6 +272,22 @@ export const libraryService = {
       }
     }
     return [];
+  },
+
+  // Update Book Reservation Status (Admin)
+  updateReservationStatus: async (id, status) => {
+    if (isConfigured) {
+      try {
+        const response = await api.put(`/api/resource/Book Reservation/${id}`, {
+          status: status
+        });
+        return response.data;
+      } catch (error) {
+        console.error(`ERPNext Failed to update reservation status for ${id}.`, error);
+        throw error;
+      }
+    }
+    return { success: true };
   },
 
   // Update Issue Record Status (Admin)

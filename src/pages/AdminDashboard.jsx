@@ -378,7 +378,7 @@ const ReservationsView = () => {
 
   const updateStatus = async (id, newStatus) => {
     try {
-      await libraryService.updateIssueRecordStatus(id, newStatus);
+      await libraryService.updateReservationStatus(id, newStatus);
       // Optimistically update the UI
       setRequests(requests.map(req => req.id === id ? { ...req, status: newStatus } : req));
     } catch (error) {
@@ -422,8 +422,8 @@ const ReservationsView = () => {
                   <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{req.date}</td>
                   <td style={{ padding: '1rem 1.5rem' }}>
                     <span className={`badge ${
-                      req.status === 'Approved' || req.status === 'Issued' ? 'badge-success' : 
-                      req.status === 'Rejected' ? 'badge-danger' : 'badge-reserved'
+                      req.status === 'Approved' ? 'badge-success' : 
+                      req.status === 'Cancelled' ? 'badge-danger' : 'badge-reserved'
                     }`}>
                       {req.status}
                     </span>
@@ -431,8 +431,8 @@ const ReservationsView = () => {
                   <td style={{ padding: '1rem 1.5rem' }}>
                     {req.status === 'Pending' ? (
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => updateStatus(req.id, 'Issued')}>Approve</button>
-                        <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => updateStatus(req.id, 'Rejected')}>Reject</button>
+                        <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => updateStatus(req.id, 'Approved')}>Approve</button>
+                        <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: 'var(--font-size-xs)' }} onClick={() => updateStatus(req.id, 'Cancelled')}>Reject</button>
                       </div>
                     ) : (
                       <span className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Processed</span>
