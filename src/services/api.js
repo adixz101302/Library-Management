@@ -127,6 +127,25 @@ export const libraryService = {
     return new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1000));
   },
 
+  // Add New Book
+  addBook: async (bookData) => {
+    if (isConfigured) {
+      try {
+        const response = await api.post('/api/resource/Article', {
+          article_name: bookData.title,
+          author: bookData.author,
+          category: bookData.category,
+          available: 1
+        });
+        return response.data;
+      } catch (error) {
+        console.error("ERPNext Add Book Failed.", error);
+        throw error;
+      }
+    }
+    return new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1000));
+  },
+
   // Fetch User Reservations
   getMyReservations: async () => {
     if (isConfigured) {

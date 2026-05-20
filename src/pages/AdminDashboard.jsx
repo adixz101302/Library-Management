@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Book, Users, ClipboardList, TrendingUp, AlertTriangle, Plus, Send, Settings as SettingsIcon } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
 import StatCard from '../components/shared/StatCard';
+import { libraryService } from '../services/api';
 
 // ----------------------------------------------------
 // 1. DASHBOARD OVERVIEW VIEW
@@ -117,21 +118,31 @@ const InventoryView = () => {
     { id: 'B-104', title: 'Clean Architecture', author: 'Robert C. Martin', category: 'Software Engineering', qty: 4, status: 'Available' }
   ]);
   const [showModal, setShowModal] = useState(false);
-  const [newBook, setNewBook] = useState({ title: '', author: '', category: 'Computer Science', qty: 1 });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newBook, setNewBook] = useState({ title: '', author: '', category: 'Technology', qty: 1 });
 
-  const handleAddBook = (e) => {
+  const handleAddBook = async (e) => {
     e.preventDefault();
-    const newId = `B-${Math.floor(100 + Math.random() * 900)}`;
-    setBooks([...books, {
-      id: newId,
-      title: newBook.title,
-      author: newBook.author,
-      category: newBook.category,
-      qty: parseInt(newBook.qty),
-      status: 'Available'
-    }]);
-    setShowModal(false);
-    setNewBook({ title: '', author: '', category: 'Computer Science', qty: 1 });
+    setIsSubmitting(true);
+    try {
+      await libraryService.addBook(newBook);
+      const newId = `B-${Math.floor(100 + Math.random() * 900)}`;
+      setBooks([...books, {
+        id: newId,
+        title: newBook.title,
+        author: newBook.author,
+        category: newBook.category,
+        qty: parseInt(newBook.qty),
+        status: 'Available'
+      }]);
+      setShowModal(false);
+      setNewBook({ title: '', author: '', category: 'Technology', qty: 1 });
+    } catch (error) {
+      console.error("Failed to add book", error);
+      alert("Failed to save the book to ERPNext. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -196,10 +207,11 @@ const InventoryView = () => {
               <div className="input-group">
                 <label className="input-label">Category</label>
                 <select className="input-field" value={newBook.category} onChange={e => setNewBook({...newBook, category: e.target.value})}>
-                  <option value="Computer Science">Computer Science</option>
-                  <option value="Information Technology">Information Technology</option>
-                  <option value="Data Science">Data Science</option>
-                  <option value="Software Engineering">Software Engineering</option>
+                  <option value="Technology">Technology</option>
+                  <option value="Programming">Programming</option>
+                  <option value="Science">Science</option>
+                  <option value="Novel">Novel</option>
+                  <option value="History">History</option>
                 </select>
               </div>
               <div className="input-group" style={{ marginBottom: '2rem' }}>
@@ -207,8 +219,10 @@ const InventoryView = () => {
                 <input type="number" min="1" className="input-field" required value={newBook.qty} onChange={e => setNewBook({...newBook, qty: e.target.value})} />
               </div>
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Add Book</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)} disabled={isSubmitting}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : 'Add Book'}
+                </button>
               </div>
             </form>
           </div>
