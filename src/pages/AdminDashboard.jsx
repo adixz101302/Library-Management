@@ -137,8 +137,10 @@ const InventoryView = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await libraryService.addBook(newBook);
-      const newId = `B-${Math.floor(100 + Math.random() * 900)}`;
+      const result = await libraryService.addBook(newBook);
+      // Use the actual ERPNext document name as the ID (or fallback to the title)
+      const newId = result?.data?.name || newBook.title;
+      
       setBooks([...books, {
         id: newId,
         title: newBook.title,
