@@ -695,6 +695,7 @@ const ReservationsView = () => {
               <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Request ID</th>
               <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Member</th>
               <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Book Title</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Queue Pos</th>
               <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Date Requested</th>
               <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Status</th>
               <th style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Actions</th>
@@ -703,11 +704,11 @@ const ReservationsView = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>Loading reservations from ERPNext...</td>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>Loading reservations from ERPNext...</td>
               </tr>
             ) : requests.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>No reservations found.</td>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>No reservations found.</td>
               </tr>
             ) : (
               requests.map((req) => (
@@ -715,11 +716,13 @@ const ReservationsView = () => {
                   <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{req.id}</td>
                   <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{req.member}</td>
                   <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{req.book}</td>
+                  <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>{req.queuePosition || '-'}</td>
                   <td style={{ padding: '1rem 1.5rem', color: 'var(--color-text-secondary)' }}>{req.date}</td>
                   <td style={{ padding: '1rem 1.5rem' }}>
                     <span className={`badge ${
                       req.status === 'Approved' ? 'badge-success' : 
-                      req.status === 'Cancelled' ? 'badge-danger' : 'badge-reserved'
+                      req.status === 'Cancelled' ? 'badge-danger' : 
+                      req.status === 'Pending' ? 'badge-reserved' : 'badge-success'
                     }`}>
                       {req.status}
                     </span>

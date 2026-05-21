@@ -184,7 +184,7 @@ export const libraryService = {
   reserveBook: async (reservationData) => {
     if (isConfigured) {
       try {
-        const response = await api.post('/api/resource/Book Reservation', {
+        const response = await api.post('/api/resource/Reservation', {
           article: reservationData.articleId,
           member: reservationData.memberName, 
           reservation_date: reservationData.reservationDate || new Date().toISOString().split('T')[0],
@@ -227,9 +227,9 @@ export const libraryService = {
   getMyReservations: async () => {
     if (isConfigured) {
       try {
-        const response = await api.get('/api/resource/Book Reservation', {
+        const response = await api.get('/api/resource/Reservation', {
           params: { 
-            fields: '["name", "article", "reservation_date", "status"]',
+            fields: '["name", "article", "reservation_date", "status", "queue_position"]',
             limit_page_length: 50
           }
         });
@@ -238,7 +238,8 @@ export const libraryService = {
           article: res.article,
           date: res.reservation_date || '-',
           expectedAvailability: 'Pending',
-          status: res.status
+          status: res.status,
+          queuePosition: res.queue_position || 0
         }));
       } catch (error) {
         console.error("ERPNext API Failed (My Reservations).", error);
@@ -251,11 +252,11 @@ export const libraryService = {
   getAllReservations: async () => {
     if (isConfigured) {
       try {
-        const response = await api.get('/api/resource/Book Reservation', {
+        const response = await api.get('/api/resource/Reservation', {
           params: { 
-            fields: '["name", "member", "article", "reservation_date", "status"]',
+            fields: '["name", "member", "article", "reservation_date", "status", "queue_position"]',
             limit_page_length: 500,
-            order_by: 'creation desc'
+            order_by: 'queue_position asc, creation asc'
           }
         });
         return response.data.data.map(res => ({
@@ -263,7 +264,8 @@ export const libraryService = {
           member: res.member,
           book: res.article,
           date: res.reservation_date || '-',
-          status: res.status
+          status: res.status,
+          queuePosition: res.queue_position || 0
         }));
       } catch (error) {
         console.error("ERPNext API Failed (All Reservations).", error);
@@ -301,7 +303,7 @@ export const libraryService = {
   updateReservationStatus: async (id, status) => {
     if (isConfigured) {
       try {
-        const response = await api.put(`/api/resource/Book Reservation/${id}`, {
+        const response = await api.put(`/api/resource/Reservation/${id}`, {
           status: status
         });
         return response.data;
